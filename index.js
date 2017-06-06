@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const exphbs = require('express-handlebars');
+const logger = require('./bin/logger');
 
 const app = express();
 
@@ -29,7 +30,7 @@ app.use(express.static(path.join(__dirname, 'public'), {
 app.use('/', require('./lib/routes'));
 
 app.listen(app.get('port'), () => {
-  console.log('Hello express started on http://localhost:'
+  logger.info('Hello express started on http://localhost:'
     + `${app.get('port')}; press Ctrl-C to terminate.`);
 });
 
