@@ -1,3 +1,4 @@
+const fs = require('fs');
 const gulp = require('gulp');
 const util = require('gulp-util');
 const eslint = require('gulp-eslint');
@@ -6,8 +7,31 @@ const concat = require('gulp-concat');
 const minifyCSS = require('gulp-clean-css');
 const inject = require('gulp-inject');
 const clean = require('gulp-clean');
+const rename = require('gulp-rename');
 
 const production = !!util.env.production;
+
+gulp.task('copy-inject-templates', () => {
+  const promises = [];
+
+  fs.stat('./resources/views/layouts/injected-js.hbs', (err) => {
+    if (err !== null) {
+      gulp.src('./resources/views/layouts/injected-js.hbs.default')
+        .pipe(rename('injected-js.hbs'))
+        .pipe(gulp.dest('./resources/views/layouts'));
+    }
+  });
+
+  fs.stat('./resources/views/layouts/injected-css.hbs', (err) => {
+    if (err !== null) {
+      gulp.src('./resources/views/layouts/injected-css.hbs.default')
+        .pipe(rename('injected-css.hbs'))
+        .pipe(gulp.dest('./resources/views/layouts'));
+    }
+  });
+
+  return Promise.all(promises);
+});
 
 gulp.task('clean', () => (
   gulp.src(['./public/css/**/*.css', './public/js/**/*.js'], { read: false })
@@ -33,18 +57,18 @@ gulp.task('sass:watch', () => (
   gulp.watch('./sass/**/*.scss', ['sass'])
 ));
 
-gulp.task('inject-css', ['sass'], () => (
+gulp.task('inject-css', ['sass', 'copy-inject-templates'], () => (
   gulp.src('./resources/views/layouts/injected-css.hbs')
-    .pipe(inject(gulp.src(['./public/css/*.css'], { read: false })))
+    .pipe(inject(gulp.src(['./public/css/**/*.css'], { read: false })))
     .pipe(gulp.dest('./resources/views/layouts/'))
 ));
 
-gulp.task('inject-js', ['clean'], () => (
+gulp.task('inject-js', ['clean', 'copy-inject-templates'], () => (
   gulp.src('./resources/views/layouts/injected-js.hbs')
-    .pipe(inject(gulp.src(['./public/js/*.js'], { read: false })))
+    .pipe(inject(gulp.src(['./public/js/**/*.js'], { read: false })))
     .pipe(gulp.dest('./resources/views/layouts/'))
 ));
 
-gulp.task('default', ['lint', 'sass', 'inject-css', 'inject-js'], () => {
+gulp.task('default', ['clean', 'copy-inject-templates', 'lint', 'sass', 'inject-css', 'inject-js'], () => {
   //
 });
